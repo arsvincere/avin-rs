@@ -1,6 +1,9 @@
+use std::path::Path;
+
 use crate::conf::{DAY_BEGIN, DT_FMT, MSK_TIME_DIF};
 use crate::data::instrument::Instrument;
 use crate::data::market_data::MarketData;
+use crate::Cmd;
 use chrono::prelude::*;
 use polars::prelude::*;
 
@@ -8,8 +11,6 @@ pub struct SourceMoex {
     // pub name: String,
     service: String,
     api_key: String,
-    // user_name: String,
-    // password: String,
     client: reqwest::Client,
     candle_schema: Schema,
 }
@@ -17,9 +18,9 @@ impl SourceMoex {
     pub fn new() -> Self {
         // let name = "MOEX";
         let service = "https://apim.moex.com/iss";
-        let api_key = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJaVHA2Tjg1ekE4YTBFVDZ5SFBTajJ2V0ZldzNOc2xiSVR2bnVaYWlSNS1NIn0.eyJleHAiOjE3NDUzMDc1MzMsImlhdCI6MTc0MjcxNTUzMywiYXV0aF90aW1lIjoxNzQyNzE1MTExLCJqdGkiOiIxZWVmMmEyYi0wZTYzLTQyNjAtOWViNS1iODkwNDEzYTE2YjIiLCJpc3MiOiJodHRwczovL3NzbzIubW9leC5jb20vYXV0aC9yZWFsbXMvY3JhbWwiLCJhdWQiOlsiYWNjb3VudCIsImlzcyJdLCJzdWIiOiJmOjBiYTZhOGYwLWMzOGEtNDlkNi1iYTBlLTg1NmYxZmU0YmY3ZTo3OWViYzZhNi1iNmNlLTRjZWUtOGNhYi03OTI5NmI1MGYzZjIiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJpc3MiLCJzaWQiOiI4NWZkZWFiZi0zMjExLTRlMDgtYmFiNy0yZGRhZTY2MWE3ZTUiLCJhY3IiOiIxIiwiYWxsb3dlZC1vcmlnaW5zIjpbIi8qIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoib3BlbmlkIGlzc19hbGdvcGFjayBwcm9maWxlIG9mZmxpbmVfYWNjZXNzIGVtYWlsIGJhY2t3YXJkc19jb21wYXRpYmxlIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJpc3NfcGVybWlzc2lvbnMiOiIxMzcsIDEzOCwgMTM5LCAxNDAsIDE2NSwgMTY2LCAxNjcsIDE2OCwgMzI5LCA0MjEiLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiI3OWViYzZhNi1iNmNlLTRjZWUtOGNhYi03OTI5NmI1MGYzZjIiLCJzZXNzaW9uX3N0YXRlIjoiODVmZGVhYmYtMzIxMS00ZTA4LWJhYjctMmRkYWU2NjFhN2U1In0.KSgQ4LnZA-QXwImADKm0xdQYqAxqxpk2YQ3V8ejGOPlV9Gs4JEAmqvWwhrkMylFJHnHf68Qgw11xEltyzF2kqZ9a5Zv5aVjtaE7qr6IdSVuWBp0X6AKIIS2uStKeqmT0BePesecPeY6DGBlnOYznpttnnCtkNGJ1Ax72qgZA8-Cz2LudilJVEQW0-OsBd-FZO4rr1sZ68Qa8JeUdJOHzErxhO7oPha0xHuL_2ypa-G9-KDUQArfc7okVcnetE0_sxuAq80wKEYagR_4Ca82-VQdYF_doE1KSELXudfZO9nKsS35898mraWK1jhUfUKVYTaStvS9eSyyHWY9_52qhnA";
-        // let user_name = "mr.alexavin@gmail.com";
-        // let password = "GRSww23.m";
+        let key_path =
+            Path::new("/home/alex/avin/usr/connect/moex/api_key.txt");
+        let api_key = Cmd::read(key_path).unwrap().trim().to_string();
         let client = reqwest::Client::new();
 
         let candle_schema = Schema::from_iter(vec![
@@ -34,9 +35,7 @@ impl SourceMoex {
         Self {
             // name: name.to_string(),
             service: service.to_string(),
-            api_key: api_key.to_string(),
-            // user_name: user_name.to_string(),
-            // password: password.to_string(),
+            api_key,
             client,
             candle_schema,
         }
