@@ -1,11 +1,10 @@
-use std::path::Path;
-
 use crate::conf::{DAY_BEGIN, DT_FMT, MSK_TIME_DIF};
-use crate::data::instrument::Instrument;
+use crate::core::Asset;
 use crate::data::market_data::MarketData;
 use crate::Cmd;
 use chrono::prelude::*;
 use polars::prelude::*;
+use std::path::Path;
 
 pub struct SourceMoex {
     // pub name: String,
@@ -113,7 +112,7 @@ impl SourceMoex {
     // }
     pub async fn get_bars(
         &self,
-        instrument: &Instrument,
+        asset: &Asset,
         market_data: &MarketData,
         begin: &DateTime<Utc>,
         end: &DateTime<Utc>,
@@ -125,7 +124,7 @@ impl SourceMoex {
         while from < till {
             println!("   from {from}");
             let response = self
-                .try_request(instrument, market_data, &from, &till)
+                .try_request(asset, market_data, &from, &till)
                 .await
                 .unwrap();
             let json: serde_json::Value = match response.json().await {
@@ -219,12 +218,12 @@ impl SourceMoex {
     }
     async fn try_request(
         &self,
-        instrument: &Instrument,
+        asset: &Asset,
         market_data: &MarketData,
         from: &NaiveDateTime,
         till: &NaiveDateTime,
     ) -> Result<reqwest::Response, reqwest::Error> {
-        let url = self.get_url(instrument, market_data, from, till).unwrap();
+        let url = self.get_url(asset, market_data, from, till).unwrap();
         let request = self
             .client
             .get(&url)
@@ -237,15 +236,15 @@ impl SourceMoex {
     }
     fn get_url(
         &self,
-        instrument: &Instrument,
+        asset: &Asset,
         market_data: &MarketData,
         begin: &NaiveDateTime,
         end: &NaiveDateTime,
     ) -> Result<String, &'static str> {
         let mut url = self.service.clone();
 
-        assert_eq!(instrument.itype, "SHARE");
-        if instrument.itype == "SHARE" {
+        assert_eq!(asset.itype, "SHARE");
+        if asset.itype == "SHARE" {
             url.push_str(
                 "/engines/stock/markets/shares/boards/tqbr/securities/",
             );
@@ -253,7 +252,7 @@ impl SourceMoex {
             panic!("unsupported itype");
         }
 
-        let ticker = &instrument.ticker;
+        let ticker = &asset.ticker;
         let data = "/candles.json?";
         let from = format!("from={begin}&"); // "from=2025-01-01 00:00&"
         let till = format!("till={end}&"); // "till=2025-03-27 14:35&"
