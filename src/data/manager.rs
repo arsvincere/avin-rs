@@ -89,19 +89,50 @@ impl Manager {
             year += 1;
         }
 
-        let date_time = Self::extract_dt(&df);
-        let open = Self::extract_open(&df);
-        let high = Self::extract_high(&df);
-        let low = Self::extract_low(&df);
-        let close = Self::extract_close(&df);
-        let volume = Self::extract_volume(&df);
+        let date_time = df
+            .column("dt")
+            .unwrap()
+            .datetime()
+            .unwrap()
+            .as_datetime_iter()
+            .map(|x| x.unwrap().and_utc());
+        let mut open = df
+            .column("open")
+            .unwrap()
+            .f64()
+            .unwrap()
+            .into_no_null_iter();
+        let mut high = df
+            .column("high")
+            .unwrap()
+            .f64()
+            .unwrap()
+            .into_no_null_iter();
+        let mut low =
+            df.column("low").unwrap().f64().unwrap().into_no_null_iter();
+        let mut close = df
+            .column("close")
+            .unwrap()
+            .f64()
+            .unwrap()
+            .into_no_null_iter();
+        let mut volume = df
+            .column("volume")
+            .unwrap()
+            .u64()
+            .unwrap()
+            .into_no_null_iter();
 
         let mut bars: Vec<Bar> = Vec::new();
-        for i in 0..df.height() {
-            let dt = date_time[i];
+        for dt in date_time {
             if dt >= *begin && dt < *end {
                 let bar = Bar::new(
-                    dt, open[i], high[i], low[i], close[i], volume[i],
+                    dt,
+                    open.next().unwrap(),
+                    high.next().unwrap(),
+                    low.next().unwrap(),
+                    close.next().unwrap(),
+                    volume.next().unwrap(),
                 )
                 .unwrap();
                 bars.push(bar);
@@ -245,55 +276,6 @@ impl Manager {
         //     i = last
         //
         // return converted
-    }
-    fn extract_dt(df: &DataFrame) -> Vec<DateTime<Utc>> {
-        df.column("dt")
-            .unwrap()
-            .datetime()
-            .unwrap()
-            .as_datetime_iter()
-            .map(|x| x.unwrap().and_utc())
-            .collect()
-    }
-    fn extract_open(df: &DataFrame) -> Vec<f64> {
-        df.column("open")
-            .unwrap()
-            .f64()
-            .unwrap()
-            .into_no_null_iter()
-            .collect()
-    }
-    fn extract_high(df: &DataFrame) -> Vec<f64> {
-        df.column("high")
-            .unwrap()
-            .f64()
-            .unwrap()
-            .into_no_null_iter()
-            .collect()
-    }
-    fn extract_low(df: &DataFrame) -> Vec<f64> {
-        df.column("low")
-            .unwrap()
-            .f64()
-            .unwrap()
-            .into_no_null_iter()
-            .collect()
-    }
-    fn extract_close(df: &DataFrame) -> Vec<f64> {
-        df.column("close")
-            .unwrap()
-            .f64()
-            .unwrap()
-            .into_no_null_iter()
-            .collect()
-    }
-    fn extract_volume(df: &DataFrame) -> Vec<u64> {
-        df.column("volume")
-            .unwrap()
-            .u64()
-            .unwrap()
-            .into_no_null_iter()
-            .collect()
     }
 }
 
